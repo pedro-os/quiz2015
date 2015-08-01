@@ -40,6 +40,27 @@ app.use(function(req, res, next){
     next();
 });
 
+// Middleware de autologout
+app.use(function(req, res, next){
+    var ahora = Date.now();
+    var antes;
+
+    if (req.session.user) { // Si hay sesión autenticada
+        if (!req.session.hora_conexion) { // Primera conexión
+            req.session.hora_conexion = ahora;
+        } else {
+            antes = req.session.hora_conexion;
+            if (ahora-antes > 120000) { // 2 minutos de inactividad
+                delete req.session.user;
+                delete req.session.hora_conexion;
+            } else {
+                req.session.hora_conexion = ahora;
+            }
+        }
+    }
+    next();
+});
+
 app.use('/', routes);
 
 // catch 404 and forward to error handler
